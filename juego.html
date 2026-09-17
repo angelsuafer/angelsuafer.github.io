@@ -24,16 +24,16 @@ button,input{font:inherit}.screen{min-height:100vh;display:none;padding:28px 18p
 <section id="result" class="screen"><div class="wrap"><div class="card"><div class="eyebrow">Fin del juego</div><div class="leaf">🏆</div><h2>¡Tenemos una puntuación!</h2><div id="score" class="score">0</div><p class="result-copy">puntos</p><div class="field"><label for="playerName">¿Cómo te llamas?</label><input id="playerName" maxlength="50" autocomplete="name" placeholder="Nombre y apellidos"></div><div class="center"><button id="saveBtn" class="btn">Guardar mi puntuación</button></div><p id="saveNotice" class="notice">La clasificación definitiva se conectará cuando terminemos de configurar el marcador.</p><div id="localRanking" class="ranking hidden"></div></div></div></section>
 <script>
 const questions=[
- {q:'¿Dónde se conocieron Ángel y Antonio?',a:['Instagram','CrossFit','De fiesta 🎉','Por amigos en común'],c:0},
- {q:'¿En qué año empezaron su historia Ángel y Antonio?',a:['2022','2023','2024'],c:1},
- {q:'¿Quién pidió formalizar la relación?',a:['Ángel','Antonio','Nadie, simplemente surgió'],c:1},
+ {q:'¿Cómo nos conocimos?',a:['Instagram','CrossFit','De fiesta','Por amigos en común'],c:0},
+ {q:'¿En qué verano surgió el flechazo?',a:['2022','2023','2024'],c:1},
+ {q:'¿Quién pidió formalizar la relación?',a:['Ángel','Antonio','Ninguno, simplemente surgió'],c:1},
  {q:'¿Cuál fue nuestro primer viaje juntos en avión?',a:['Milán','París','Oporto','Ibiza'],c:3},
  {q:'Todos sabéis que la pedida de mano fue en EEUU. ¿Dónde concretamente?',a:['Zion National Park, Utah','Las Vegas, Nevada','Antelope Canyon, Arizona','Yosemite National Park, California'],c:0},
- {q:'¿Quién tiene miedo a las alturas?',a:['Ángel','Antonio'],c:1},
- {q:'¿Quién cocina mejor?',a:['Ángel','Antonio'],c:0},
- {q:'¿Cuándo nos fuimos a vivir juntos?',a:['Navidad 2024','Verano 2025','Desde que nos conocimos'],c:0},
+ {q:'¿Cuál es nuestro juego de mesa preferido?',a:['Cartas','Trivial','Parchís','Monopoly'],c:2},
+ {q:'Ambos nacimos el mismo día de la semana.',a:['Verdadero','Falso'],c:0},
+ {q:'¿Cuándo nos fuimos a vivir juntos?',a:['Verano 2024','Navidad 2024','Verano 2025','Desde que nos conocimos'],c:1},
  {q:'¿Quién ocupa más espacio en el vestidor de casa?',a:['Ángel','Antonio','Repartido al 50%','Chloe, sin duda'],c:1},
- {q:'¿Qué crimen culinario nos encanta?',a:['Tortilla de patata SIN cebolla','Cilantro en la comida','Pizza con piña'],c:2}
+ {q:'¿Qué crimen culinario nos encanta?',a:['Tortilla de patata SIN cebolla','Cilantro en la comida','Pizza CON piña'],c:2}
 ];
 let i=0,score=0,time=20,timerId=null,answered=false;
 const $=id=>document.getElementById(id);function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
