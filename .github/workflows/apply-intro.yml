@@ -1,0 +1,106 @@
+name: Aplicar apertura cinematográfica
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-intro.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actualizar index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+
+          intro_start = s.find('<div class="wedding-intro"')
+          nav_start = s.find('<nav>', intro_start)
+          if intro_start < 0 or nav_start < 0:
+              raise SystemExit("No se encontró el bloque de apertura")
+
+          intro = """<div class="wedding-intro" id="weddingIntro" aria-hidden="false">
+            <div class="wedding-intro-stage">
+              <img class="wedding-intro-image" src="invitación.PNG" alt="Ángel & Antonio · 17 abril 2027">
+              <div class="wedding-intro-shimmer" aria-hidden="true"></div>
+              <button class="wedding-intro-seal-hit" id="weddingIntroOpen" type="button" aria-label="Toca el sello para abrir la invitación"></button>
+              <div class="wedding-intro-hint" aria-hidden="true">
+                <span>TOCA EL SELLO</span>
+                <small>PARA ABRIR NUESTRA INVITACIÓN</small>
+              </div>
+            </div>
+          </div>"""
+          s = s[:intro_start] + intro + s[nav_start:]
+
+          css = """<style>
+          /* Apertura de invitación — imagen real, cinematográfica y táctil */
+          .wedding-intro{position:fixed;inset:0;z-index:99999;background:#d8c9b1;overflow:hidden;opacity:1;visibility:visible;transition:opacity 1.15s ease,visibility 1.15s ease}
+          .wedding-intro.is-gone{opacity:0;visibility:hidden;pointer-events:none}
+          .wedding-intro-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 42%,#efe5d5 0%,#d9cbb5 58%,#cbbba2 100%)}
+          .wedding-intro-image{width:100%;height:100%;object-fit:contain;object-position:center;display:block;transform:scale(1);filter:saturate(1.01) contrast(1.01);transition:transform 1.65s cubic-bezier(.16,.84,.24,1),filter 1.1s ease}
+          .wedding-intro-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(67,48,27,.16) 100%);pointer-events:none;z-index:2}
+          .wedding-intro-shimmer{position:absolute;inset:-30%;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,249,235,.20) 49%,transparent 56%);transform:translateX(-55%) rotate(4deg);animation:intro-shimmer 7s ease-in-out infinite}
+          .wedding-intro-seal-hit{position:absolute;left:50%;top:50%;width:clamp(72px,19vw,118px);height:clamp(72px,19vw,118px);transform:translate(-50%,-50%);border:0;border-radius:50%;background:transparent;cursor:pointer;z-index:5;touch-action:manipulation;box-shadow:0 0 0 1px rgba(255,241,211,.18),0 0 34px rgba(171,126,56,.20);transition:transform .45s ease,opacity .45s ease,box-shadow .45s ease}
+          .wedding-intro-seal-hit:before{content:"";position:absolute;inset:7px;border:1px solid rgba(255,246,223,.48);border-radius:50%;animation:intro-pulse 2.8s ease-in-out infinite}
+          .wedding-intro-hint{position:absolute;left:50%;bottom:8.5%;transform:translateX(-50%);z-index:4;text-align:center;color:#675640;text-shadow:0 1px 12px rgba(255,248,230,.65);pointer-events:none;white-space:nowrap}
+          .wedding-intro-hint span{display:block;font:500 12px/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:.28em}
+          .wedding-intro-hint small{display:block;margin-top:7px;font:9px/1.2 "EB Garamond",Georgia,serif;letter-spacing:.16em}
+          .wedding-intro.opening .wedding-intro-image{transform:scale(1.14);filter:brightness(1.06) saturate(1.04)}
+          .wedding-intro.opening .wedding-intro-seal-hit{transform:translate(-50%,-50%) scale(1.75);opacity:0;box-shadow:0 0 0 20px rgba(218,181,112,.12),0 0 80px rgba(190,143,70,.38)}
+          .wedding-intro.opening .wedding-intro-hint{opacity:0;transition:opacity .25s ease}
+          .wedding-intro.opening .wedding-intro-shimmer{animation:intro-open-shimmer 1.45s ease both}
+          @keyframes intro-shimmer{0%,72%{transform:translateX(-65%) rotate(4deg);opacity:0}82%{opacity:1}100%{transform:translateX(65%) rotate(4deg);opacity:0}}
+          @keyframes intro-open-shimmer{0%{transform:translateX(-65%) rotate(4deg);opacity:0}45%{opacity:1}100%{transform:translateX(65%) rotate(4deg);opacity:0}}
+          @keyframes intro-pulse{0%,100%{transform:scale(.96);opacity:.35}50%{transform:scale(1.05);opacity:.75}}
+          @media(max-width:700px){.wedding-intro-image{width:100%;height:100%;object-fit:contain}.wedding-intro-hint{bottom:6.5%}.wedding-intro-hint span{font-size:11px}.wedding-intro-hint small{font-size:8px}}
+          </style>"""
+          s = s.replace("</style>", css + "</style>", 1)
+
+          pattern = r'<script>\(function\(\)\{var intro=document\.getElementById\("weddingIntro"\).*?</script>'
+          script = """<script>
+          (function(){
+            var intro=document.getElementById('weddingIntro');
+            var open=document.getElementById('weddingIntroOpen');
+            if(!intro||!open)return;
+            document.body.classList.add('wedding-intro-open');
+            function openInvitation(){
+              if(intro.classList.contains('opening'))return;
+              intro.classList.add('opening');
+              intro.setAttribute('aria-hidden','true');
+              window.setTimeout(function(){
+                intro.classList.add('is-gone');
+                document.body.classList.remove('wedding-intro-open');
+                window.setTimeout(function(){intro.remove()},1200);
+              },1550);
+            }
+            open.addEventListener('click',openInvitation);
+          })();
+          </script>"""
+          s, n = re.subn(pattern, script, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit("No se encontró el script antiguo del intro")
+
+          p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Publicar cambios y limpiar
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Integra apertura cinematográfica de invitación" || true
+          git push
+          rm .github/workflows/apply-intro.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/apply-intro.yml
+          git commit -m "Limpia el proceso de publicación" || true
+          git push
