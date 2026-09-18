@@ -1455,6 +1455,31 @@ Antes del gran día queremos poneros a prueba. Hemos preparado un pequeño reto 
 
 <script>
 (function(){
+  var openBtn=document.getElementById('kahootButton');
+  var modal=document.getElementById('gameModal');
+  var closeBtn=document.getElementById('gameModalClose');
+  var frame=document.getElementById('gameFrame');
+  if(!openBtn||!modal||!closeBtn||!frame)return;
+  function openGame(){
+    frame.src='juego.html';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('game-open');
+  }
+  function closeGame(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('game-open');
+    frame.src='about:blank';
+  }
+  openBtn.addEventListener('click',openGame);
+  closeBtn.addEventListener('click',closeGame);
+  modal.addEventListener('click',function(e){if(e.target===modal)closeGame();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modal.classList.contains('open'))closeGame();});
+  window.closeWeddingGame=closeGame;
+})();
+</script><script>
+(function(){
   var layer=document.getElementById('weddingInvitationOpen');
   var hit=document.getElementById('weddingInvitationHit');
   if(!layer||!hit)return;
@@ -1471,6 +1496,4 @@ Antes del gran día queremos poneros a prueba. Hemos preparado un pequeño reto 
   }
   hit.addEventListener('click',openIt);
 })();
-</script>
-
-</body></html>
+</script></body></html>
