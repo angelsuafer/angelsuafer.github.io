@@ -1,4 +1,4 @@
-name: Upgrade wedding invitation intro
+name: Add cinematic wedding invitation intro
 
 on:
   push:
@@ -8,135 +8,59 @@ permissions:
   contents: write
 
 jobs:
-  upgrade:
+  intro:
     if: "!contains(github.event.head_commit.message, 'Actualiza entrada cinematográfica [TEO]')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upgrade intro
+      - name: Add cinematic intro
         shell: python
         run: |
           from pathlib import Path
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          if "id=\"weddingIntro\"" in s:
+              raise SystemExit(0)
 
-          p = Path("index.html")
-          s = p.read_text(encoding="utf-8")
-
-          css = r'''/* TEO — invitación de entrada v2 */
+          css=r'''/* TEO — invitación cinematográfica */
           .wedding-intro{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#eee7d9;overflow:hidden;opacity:1;visibility:visible;transition:opacity 1s ease,visibility 1s ease}
           .wedding-intro.is-gone{opacity:0;visibility:hidden;pointer-events:none}
-          .wedding-intro-bg{position:absolute;inset:-8%;background:radial-gradient(circle at 48% 28%,rgba(255,252,245,.98) 0%,rgba(247,240,227,.98) 38%,rgba(220,210,191,.96) 100%);overflow:hidden}
-          .wedding-intro-bg:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 12%,rgba(255,255,255,.7),transparent 28%),radial-gradient(circle at 78% 20%,rgba(255,255,255,.55),transparent 25%),linear-gradient(115deg,transparent 30%,rgba(188,165,128,.12) 48%,transparent 62%);mix-blend-mode:screen}
+          .wedding-intro-bg{position:absolute;inset:-8%;background:radial-gradient(circle at 48% 28%,#fffdf6 0%,#f7f0e3 38%,#dcd2bf 100%);overflow:hidden}
+          .wedding-intro-bg:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 12%,rgba(255,255,255,.75),transparent 28%),radial-gradient(circle at 78% 20%,rgba(255,255,255,.55),transparent 25%),linear-gradient(115deg,transparent 30%,rgba(188,165,128,.12) 48%,transparent 62%)}
           .wedding-intro-bg:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(83,69,48,.018) 0 1px,transparent 1px 4px);opacity:.55}
-          .wedding-leaves{position:absolute;inset:0;pointer-events:none;opacity:.9}
-          .wedding-leaves span{position:absolute;width:180px;height:38px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#4c5943,#738064);filter:blur(.2px);box-shadow:0 12px 20px rgba(54,49,38,.12)}
-          .wedding-leaves span:after{content:"";position:absolute;left:18px;right:18px;top:18px;height:1px;background:rgba(245,239,225,.45);transform:rotate(-5deg)}
-          .wedding-leaves .l1{left:-42px;top:80px;transform:rotate(28deg)}.wedding-leaves .l2{left:30px;top:35px;transform:rotate(-18deg) scale(.72)}.wedding-leaves .l3{right:-55px;top:110px;transform:rotate(-24deg) scale(.88)}.wedding-leaves .l4{right:25px;top:48px;transform:rotate(18deg) scale(.7)}.wedding-leaves .l5{left:-65px;bottom:80px;transform:rotate(-32deg) scale(.9)}.wedding-leaves .l6{right:-45px;bottom:40px;transform:rotate(30deg)}
-          .wedding-blossoms{position:absolute;left:4%;bottom:5%;width:150px;height:130px;pointer-events:none}.wedding-blossoms:before,.wedding-blossoms:after{content:"✽";position:absolute;color:#fffaf0;text-shadow:0 2px 6px rgba(73,62,46,.18);font-size:48px}.wedding-blossoms:before{left:0;top:28px}.wedding-blossoms:after{left:72px;top:0;font-size:35px}
-          .wedding-ribbon{position:absolute;left:-8%;bottom:4%;width:390px;height:95px;border-radius:50%;border:18px solid rgba(93,82,61,.65);border-left-color:transparent;border-bottom-color:transparent;transform:rotate(-18deg);filter:blur(.2px);opacity:.65}
-          .wedding-intro-inner{position:relative;width:min(94vw,760px);height:100%;display:flex;align-items:center;justify-content:center;z-index:2}
-          .wedding-intro-copy{position:absolute;top:7.5%;left:0;right:0;text-align:center;color:#786b58;z-index:3;transition:opacity .5s ease,transform .9s ease}
-          .wedding-intro-kicker{font:500 10px/1.3 Arial,sans-serif;letter-spacing:.34em;text-transform:uppercase;margin-bottom:11px}.wedding-intro-sub{font:400 11px/1.4 'Cormorant Garamond',Georgia,serif;letter-spacing:.22em;text-transform:uppercase;color:#9a896e}
-          .wedding-envelope-scene{position:relative;width:min(88vw,620px);aspect-ratio:1.56/1;transform:translateY(2%);filter:drop-shadow(0 28px 38px rgba(66,55,39,.22));perspective:1200px}
-          .wedding-envelope{position:absolute;inset:0;transform-style:preserve-3d}
-          .wedding-envelope-body{position:absolute;inset:0;border:1px solid rgba(108,91,64,.25);border-radius:4px;background:linear-gradient(145deg,#fbf8f0,#e7dcc8);box-shadow:inset 0 0 0 1px rgba(255,255,255,.65),inset 0 -14px 28px rgba(101,83,55,.08);overflow:hidden}
-          .wedding-envelope-body:before,.wedding-envelope-body:after{content:"";position:absolute;bottom:-2%;width:75%;height:100%;background:linear-gradient(150deg,rgba(255,255,255,.35),rgba(220,207,185,.2));border:1px solid rgba(110,91,62,.16)}.wedding-envelope-body:before{left:-36%;transform:skewY(30deg)}.wedding-envelope-body:after{right:-36%;transform:skewY(-30deg)}
-          .wedding-envelope-card{position:absolute;z-index:2;left:9%;right:9%;bottom:4%;height:89%;background:#fffdf8;border:1px solid rgba(110,91,62,.18);box-shadow:0 14px 28px rgba(66,55,39,.14);display:flex;align-items:center;justify-content:center;text-align:center;transform:translateY(0);transition:transform 1.15s cubic-bezier(.2,.8,.2,1);overflow:hidden}
-          .wedding-envelope-card:before{content:"";position:absolute;inset:13px;border:1px solid rgba(156,128,88,.3)}.wedding-envelope-card:after{content:"";position:absolute;inset:18px;background:radial-gradient(circle at 50% 20%,rgba(210,188,151,.13),transparent 42%);pointer-events:none}
-          .wedding-envelope-card-content{position:relative;z-index:2;padding:24px}.wedding-envelope-card-kicker{font:500 9px Arial,sans-serif;letter-spacing:.31em;text-transform:uppercase;color:#9a8768}.wedding-envelope-card-names{margin:10px 0 8px;color:#49463f;font:400 clamp(30px,5vw,48px)/1 'Cormorant Garamond',Georgia,serif;letter-spacing:.02em}.wedding-envelope-card-date{font:500 11px Arial,sans-serif;letter-spacing:.3em;color:#8c795c}
-          .wedding-envelope-flap{position:absolute;z-index:5;left:0;right:0;top:0;height:62%;background:linear-gradient(180deg,#fffaf0,#eee3cf);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:rotateX(0);backface-visibility:hidden;transition:transform 1.35s cubic-bezier(.18,.72,.2,1);filter:drop-shadow(0 2px 2px rgba(65,53,36,.15))}
-          .wedding-envelope-fold-left,.wedding-envelope-fold-right{position:absolute;z-index:4;top:0;bottom:0;width:51%;background:linear-gradient(145deg,rgba(255,255,255,.25),rgba(221,207,184,.22));pointer-events:none}.wedding-envelope-fold-left{left:0;clip-path:polygon(0 0,100% 50%,0 100%);border-right:1px solid rgba(108,91,64,.1)}.wedding-envelope-fold-right{right:0;clip-path:polygon(100% 0,0 50%,100% 100%);border-left:1px solid rgba(108,91,64,.1)}
+          .wedding-leaves{position:absolute;inset:0;pointer-events:none;opacity:.9}.wedding-leaves span{position:absolute;width:180px;height:38px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#4c5943,#738064);box-shadow:0 12px 20px rgba(54,49,38,.12)}.wedding-leaves span:after{content:"";position:absolute;left:18px;right:18px;top:18px;height:1px;background:rgba(245,239,225,.45);transform:rotate(-5deg)}.wedding-leaves .l1{left:-42px;top:80px;transform:rotate(28deg)}.wedding-leaves .l2{left:30px;top:35px;transform:rotate(-18deg) scale(.72)}.wedding-leaves .l3{right:-55px;top:110px;transform:rotate(-24deg) scale(.88)}.wedding-leaves .l4{right:25px;top:48px;transform:rotate(18deg) scale(.7)}.wedding-leaves .l5{left:-65px;bottom:80px;transform:rotate(-32deg) scale(.9)}.wedding-leaves .l6{right:-45px;bottom:40px;transform:rotate(30deg)}
+          .wedding-blossoms{position:absolute;left:4%;bottom:5%;width:150px;height:130px;pointer-events:none}.wedding-blossoms:before,.wedding-blossoms:after{content:"✽";position:absolute;color:#fffaf0;text-shadow:0 2px 6px rgba(73,62,46,.18);font-size:48px}.wedding-blossoms:before{left:0;top:28px}.wedding-blossoms:after{left:72px;top:0;font-size:35px}.wedding-ribbon{position:absolute;left:-8%;bottom:4%;width:390px;height:95px;border-radius:50%;border:18px solid rgba(93,82,61,.65);border-left-color:transparent;border-bottom-color:transparent;transform:rotate(-18deg);opacity:.65}
+          .wedding-intro-inner{position:relative;width:min(94vw,760px);height:100%;display:flex;align-items:center;justify-content:center;z-index:2}.wedding-intro-copy{position:absolute;top:7.5%;left:0;right:0;text-align:center;color:#786b58;z-index:3;transition:opacity .5s ease}.wedding-intro-kicker{font:500 10px/1.3 Arial,sans-serif;letter-spacing:.34em;text-transform:uppercase;margin-bottom:11px}.wedding-intro-sub{font:400 11px/1.4 'Cormorant Garamond',Georgia,serif;letter-spacing:.22em;text-transform:uppercase;color:#9a896e}
+          .wedding-envelope-scene{position:relative;width:min(88vw,620px);aspect-ratio:1.56/1;transform:translateY(2%);filter:drop-shadow(0 28px 38px rgba(66,55,39,.22));perspective:1200px}.wedding-envelope{position:absolute;inset:0;transform-style:preserve-3d}.wedding-envelope-body{position:absolute;inset:0;border:1px solid rgba(108,91,64,.25);border-radius:4px;background:linear-gradient(145deg,#fbf8f0,#e7dcc8);box-shadow:inset 0 0 0 1px rgba(255,255,255,.65),inset 0 -14px 28px rgba(101,83,55,.08);overflow:hidden}.wedding-envelope-body:before,.wedding-envelope-body:after{content:"";position:absolute;bottom:-2%;width:75%;height:100%;background:linear-gradient(150deg,rgba(255,255,255,.35),rgba(220,207,185,.2));border:1px solid rgba(110,91,62,.16)}.wedding-envelope-body:before{left:-36%;transform:skewY(30deg)}.wedding-envelope-body:after{right:-36%;transform:skewY(-30deg)}
+          .wedding-envelope-card{position:absolute;z-index:2;left:9%;right:9%;bottom:4%;height:89%;background:#fffdf8;border:1px solid rgba(110,91,62,.18);box-shadow:0 14px 28px rgba(66,55,39,.14);display:flex;align-items:center;justify-content:center;text-align:center;transform:translateY(0);transition:transform 1.15s cubic-bezier(.2,.8,.2,1);overflow:hidden}.wedding-envelope-card:before{content:"";position:absolute;inset:13px;border:1px solid rgba(156,128,88,.3)}.wedding-envelope-card:after{content:"";position:absolute;inset:18px;background:radial-gradient(circle at 50% 20%,rgba(210,188,151,.13),transparent 42%)}.wedding-envelope-card-content{position:relative;z-index:2;padding:24px}.wedding-envelope-card-kicker{font:500 9px Arial,sans-serif;letter-spacing:.31em;text-transform:uppercase;color:#9a8768}.wedding-envelope-card-names{margin:10px 0 8px;color:#49463f;font:400 clamp(30px,5vw,48px)/1 'Cormorant Garamond',Georgia,serif;letter-spacing:.02em}.wedding-envelope-card-date{font:500 11px Arial,sans-serif;letter-spacing:.3em;color:#8c795c}
+          .wedding-envelope-flap{position:absolute;z-index:5;left:0;right:0;top:0;height:62%;background:linear-gradient(180deg,#fffaf0,#eee3cf);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:rotateX(0);backface-visibility:hidden;transition:transform 1.35s cubic-bezier(.18,.72,.2,1);filter:drop-shadow(0 2px 2px rgba(65,53,36,.15))}.wedding-envelope-fold-left,.wedding-envelope-fold-right{position:absolute;z-index:4;top:0;bottom:0;width:51%;background:linear-gradient(145deg,rgba(255,255,255,.25),rgba(221,207,184,.22));pointer-events:none}.wedding-envelope-fold-left{left:0;clip-path:polygon(0 0,100% 50%,0 100%);border-right:1px solid rgba(108,91,64,.1)}.wedding-envelope-fold-right{right:0;clip-path:polygon(100% 0,0 50%,100% 100%);border-left:1px solid rgba(108,91,64,.1)}
           .wedding-envelope-seal{position:absolute;z-index:7;left:50%;top:57%;transform:translate(-50%,-50%);width:78px;height:78px;border:0;border-radius:50%;background:radial-gradient(circle at 32% 28%,#c9a86e 0,#a47b3d 35%,#74572e 68%,#a27b3d 100%);box-shadow:0 8px 15px rgba(55,42,24,.28),inset 0 2px 3px rgba(255,245,214,.5),inset 0 -3px 5px rgba(47,32,15,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .28s ease,opacity .55s ease}.wedding-envelope-seal:before{content:"AA";font:italic 400 27px/1 'Cormorant Garamond',Georgia,serif;color:#f8efd9;letter-spacing:-.12em;padding-right:.12em;width:43px;height:43px;border:1px solid rgba(255,246,219,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(66,42,16,.35)}.wedding-envelope-seal:after{content:"";position:absolute;inset:5px;border-radius:50%;border:1px dashed rgba(255,245,218,.3)}.wedding-envelope-seal:hover{transform:translate(-50%,-50%) scale(1.045)}
           .wedding-envelope-hint{position:absolute;z-index:8;left:0;right:0;top:calc(100% + 34px);text-align:center;color:#706451;font:500 10px Arial,sans-serif;letter-spacing:.3em;text-transform:uppercase;transition:opacity .35s ease}.wedding-envelope-hint:after{content:"";display:block;width:1px;height:34px;background:#a89579;margin:13px auto 0;opacity:.55}
-          .wedding-intro.opening .wedding-envelope-flap{transform:rotateX(-178deg)}.wedding-intro.opening .wedding-envelope-card{transform:translateY(-49%)}.wedding-intro.opening .wedding-envelope-seal{opacity:0;transform:translate(-50%,-50%) scale(.55)}.wedding-intro.opening .wedding-envelope-hint,.wedding-intro.opening .wedding-intro-copy{opacity:0}.wedding-intro.opening .wedding-envelope-scene{animation:wedding-scene-lift 1.9s cubic-bezier(.2,.75,.2,1) both}.wedding-intro.opening .wedding-intro-bg{animation:wedding-light 2.1s ease both}.wedding-intro.opening .wedding-intro-inner{animation:wedding-inner-focus 1.8s ease both}
-          .wedding-intro-open{overflow:hidden}
-          @keyframes wedding-scene-lift{0%{transform:translateY(2%) scale(1)}58%{transform:translateY(-1%) scale(1.015)}100%{transform:translateY(-4%) scale(1.08)}}@keyframes wedding-light{0%{filter:brightness(1)}55%{filter:brightness(1.03)}100%{filter:brightness(1.14)}}@keyframes wedding-inner-focus{0%{transform:scale(1)}100%{transform:scale(1.025)}} 
-          @media(max-width:700px){.wedding-intro-copy{top:9%}.wedding-intro-kicker{font-size:9px;letter-spacing:.27em}.wedding-intro-sub{font-size:10px}.wedding-envelope-scene{width:88vw;transform:translateY(1%)}.wedding-envelope-card-names{font-size:32px}.wedding-envelope-seal{width:70px;height:70px}.wedding-envelope-seal:before{font-size:24px;width:39px;height:39px}.wedding-envelope-hint{top:calc(100% + 27px);font-size:8px;letter-spacing:.22em}.wedding-ribbon{width:280px;bottom:6%}.wedding-leaves span{width:130px;height:28px}.wedding-blossoms{transform:scale(.75);transform-origin:bottom left}}
-          @media(prefers-reduced-motion:reduce){.wedding-envelope-flap,.wedding-envelope-card,.wedding-intro{transition:none!important}.wedding-intro.opening .wedding-envelope-scene,.wedding-intro.opening .wedding-intro-bg,.wedding-intro.opening .wedding-intro-inner{animation:none!important}}
+          .wedding-intro.opening .wedding-envelope-flap{transform:rotateX(-178deg)}.wedding-intro.opening .wedding-envelope-card{transform:translateY(-49%)}.wedding-intro.opening .wedding-envelope-seal{opacity:0;transform:translate(-50%,-50%) scale(.55)}.wedding-intro.opening .wedding-envelope-hint,.wedding-intro.opening .wedding-intro-copy{opacity:0}.wedding-intro.opening .wedding-envelope-scene{animation:wedding-scene-lift 1.9s cubic-bezier(.2,.75,.2,1) both}.wedding-intro.opening .wedding-intro-bg{animation:wedding-light 2.1s ease both}.wedding-intro.opening .wedding-intro-inner{animation:wedding-inner-focus 1.8s ease both}.wedding-intro-open{overflow:hidden}
+          @keyframes wedding-scene-lift{0%{transform:translateY(2%) scale(1)}58%{transform:translateY(-1%) scale(1.015)}100%{transform:translateY(-4%) scale(1.08)}}@keyframes wedding-light{0%{filter:brightness(1)}55%{filter:brightness(1.03)}100%{filter:brightness(1.14)}}@keyframes wedding-inner-focus{0%{transform:scale(1)}100%{transform:scale(1.025)}}@media(max-width:700px){.wedding-intro-copy{top:9%}.wedding-intro-kicker{font-size:9px;letter-spacing:.27em}.wedding-intro-sub{font-size:10px}.wedding-envelope-scene{width:88vw;transform:translateY(1%)}.wedding-envelope-card-names{font-size:32px}.wedding-envelope-seal{width:70px;height:70px}.wedding-envelope-seal:before{font-size:24px;width:39px;height:39px}.wedding-envelope-hint{top:calc(100% + 27px);font-size:8px;letter-spacing:.22em}.wedding-ribbon{width:280px;bottom:6%}.wedding-leaves span{width:130px;height:28px}.wedding-blossoms{transform:scale(.75);transform-origin:bottom left}}@media(prefers-reduced-motion:reduce){.wedding-envelope-flap,.wedding-envelope-card,.wedding-intro{transition:none!important}}
           '''
 
-          html = '''<div class="wedding-intro" id="weddingIntro" aria-hidden="false">
-            <div class="wedding-intro-bg">
-              <div class="wedding-leaves" aria-hidden="true"><span class="l1"></span><span class="l2"></span><span class="l3"></span><span class="l4"></span><span class="l5"></span><span class="l6"></span></div>
-              <div class="wedding-blossoms" aria-hidden="true"></div>
-              <div class="wedding-ribbon" aria-hidden="true"></div>
-            </div>
-            <div class="wedding-intro-inner">
-              <div class="wedding-intro-copy">
-                <div class="wedding-intro-kicker">Una historia real</div>
-                <div class="wedding-intro-sub">Una celebración inolvidable</div>
-              </div>
-              <div class="wedding-envelope-scene">
-                <div class="wedding-envelope" aria-label="Invitación de Ángel y Antonio">
-                  <div class="wedding-envelope-body"></div>
-                  <div class="wedding-envelope-card">
-                    <div class="wedding-envelope-card-content">
-                      <div class="wedding-envelope-card-kicker">Nos casamos</div>
-                      <div class="wedding-envelope-card-names">Ángel &amp; Antonio</div>
-                      <div class="wedding-envelope-card-date">17 · 04 · 2027</div>
-                    </div>
-                  </div>
-                  <div class="wedding-envelope-fold-left"></div>
-                  <div class="wedding-envelope-fold-right"></div>
-                  <div class="wedding-envelope-flap"></div>
-                  <button class="wedding-envelope-seal" id="weddingIntroOpen" type="button" aria-label="Abrir la invitación"></button>
-                  <div class="wedding-envelope-hint">Toca el sello para abrir</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          '''
+          html='''<div class="wedding-intro" id="weddingIntro" aria-hidden="false"><div class="wedding-intro-bg"><div class="wedding-leaves" aria-hidden="true"><span class="l1"></span><span class="l2"></span><span class="l3"></span><span class="l4"></span><span class="l5"></span><span class="l6"></span></div><div class="wedding-blossoms" aria-hidden="true"></div><div class="wedding-ribbon" aria-hidden="true"></div></div><div class="wedding-intro-inner"><div class="wedding-intro-copy"><div class="wedding-intro-kicker">Una historia real</div><div class="wedding-intro-sub">Una celebración inolvidable</div></div><div class="wedding-envelope-scene"><div class="wedding-envelope" aria-label="Invitación de Ángel y Antonio"><div class="wedding-envelope-body"></div><div class="wedding-envelope-card"><div class="wedding-envelope-card-content"><div class="wedding-envelope-card-kicker">Nos casamos</div><div class="wedding-envelope-card-names">Ángel &amp; Antonio</div><div class="wedding-envelope-card-date">17 · 04 · 2027</div></div></div><div class="wedding-envelope-fold-left"></div><div class="wedding-envelope-fold-right"></div><div class="wedding-envelope-flap"></div><button class="wedding-envelope-seal" id="weddingIntroOpen" type="button" aria-label="Abrir la invitación"></button><div class="wedding-envelope-hint">Toca el sello para abrir</div></div></div></div></div>'''
 
-          script = '''<script>
-          (function(){
-            var intro=document.getElementById('weddingIntro');
-            var open=document.getElementById('weddingIntroOpen');
-            if(!intro||!open)return;
-            document.body.classList.add('wedding-intro-open');
-            function openInvitation(){
-              if(intro.classList.contains('opening'))return;
-              intro.classList.add('opening');
-              intro.setAttribute('aria-hidden','true');
-              setTimeout(function(){
-                intro.classList.add('is-gone');
-                document.body.classList.remove('wedding-intro-open');
-                setTimeout(function(){intro.remove();},1050);
-              },1900);
-            }
-            open.addEventListener('click',openInvitation);
-          })();
-          </script>'''
+          script='''<script>(function(){var intro=document.getElementById("weddingIntro"),open=document.getElementById("weddingIntroOpen");if(!intro||!open)return;document.body.classList.add("wedding-intro-open");function openInvitation(){if(intro.classList.contains("opening"))return;intro.classList.add("opening");intro.setAttribute("aria-hidden","true");setTimeout(function(){intro.classList.add("is-gone");document.body.classList.remove("wedding-intro-open");setTimeout(function(){intro.remove()},1050)},1900)}open.addEventListener("click",openInvitation)})();</script>'''
 
-          # Replace the old TEO CSS block.
-          marker = "/* TEO — invitación de entrada"
-          start = s.find(marker)
-          if start < 0:
-              raise SystemExit("Old TEO CSS marker not found")
-          end = s.find("</style>", start)
-          if end < 0:
-              raise SystemExit("style end not found")
-          s = s[:start] + css + s[end:]
+          style=s.find("</style>")
+          body=s.find("<body>")
+          nav=s.find("<nav>",body)
+          endbody=s.rfind("</body>")
+          if style<0 or body<0 or nav<0 or endbody<0:
+              raise SystemExit("Required anchors not found")
+          s=s[:style]+css+"</style>"+s[style+8:]
+          body=s.find("<body>")
+          nav=s.find("<nav>",body)
+          s=s[:body+6]+html+s[nav:]
+          endbody=s.rfind("</body>")
+          s=s[:endbody]+script+s[endbody:]
+          p.write_text(s,encoding="utf-8")
 
-          # Replace everything between <body> and the navigation with the new intro.
-          body = s.find("<body>")
-          nav = s.find("<nav>", body)
-          if body < 0 or nav < 0:
-              raise SystemExit("body/nav not found")
-          s = s[:body+6] + html + s[nav:]
-
-          # Replace the old intro script at the end.
-          old = s.rfind("<script>\n(function(){\n  var intro=document.getElementById('weddingIntro');")
-          if old < 0:
-              raise SystemExit("Old intro script not found")
-          old_end = s.find("</script>", old)
-          if old_end < 0:
-              raise SystemExit("Old intro script end not found")
-          s = s[:old] + script + s[old_end+9:]
-
-          p.write_text(s, encoding="utf-8")
-          
-      - name: Commit and clean up
+      - name: Commit and clean workflow
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
