@@ -2,7 +2,7 @@ name: Crear apertura real del sobre
 
 on:
   pull_request_target:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
@@ -156,6 +156,7 @@ jobs:
 
           gh pr close "${{ github.event.pull_request.number }}" --delete-branch || true
 
+          rm -f .github/workflows/abrir-sobre-real.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
