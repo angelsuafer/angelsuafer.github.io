@@ -1,0 +1,214 @@
+name: Crear apertura real del sobre
+
+on:
+  push:
+    paths:
+      - '.github/workflows/abrir-sobre-real.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sustituir solo la apertura
+        run: |
+          set -e
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+
+          css = r'''<style id="wedding-invitation-animation-style">
+          #weddingInvitationOpen{
+            position:fixed!important;inset:0!important;z-index:2147483647!important;
+            display:block!important;background:#eee9df!important;overflow:hidden!important;
+            opacity:1;visibility:visible;perspective:1400px;
+            transition:opacity .75s ease,visibility .75s ease;
+          }
+          #weddingInvitationOpen.wio-finished{
+            opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+          }
+          #weddingInvitationOpen .wio-base{
+            position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+            object-fit:cover!important;object-position:center!important;
+            display:block!important;margin:0!important;padding:0!important;border:0!important;
+            transform:none!important;filter:none!important;
+          }
+          /* La parte interior tapa el antiguo triángulo del sobre cuando se levanta la solapa. */
+          #weddingInvitationOpen .wio-inside{
+            position:absolute!important;z-index:2;left:0!important;right:0!important;
+            top:0!important;bottom:0!important;pointer-events:none;
+            opacity:0;
+            background:
+              radial-gradient(ellipse at 50% 65%,rgba(255,250,228,.98) 0%,rgba(255,246,216,.92) 22%,rgba(248,237,211,.96) 43%,rgba(238,224,198,.98) 70%);
+            clip-path:polygon(0 63.5%,50% 78%,100% 63.5%,100% 100%,0 100%);
+            transition:opacity .25s ease .18s;
+          }
+          #weddingInvitationOpen .wio-inside:before{
+            content:"";
+            position:absolute;left:50%;top:69%;
+            width:min(58vw,310px);height:min(22vh,155px);
+            transform:translate(-50%,-50%) translateY(16px);
+            background:linear-gradient(145deg,#fffdf8,#f4ead6);
+            border:1px solid rgba(139,128,98,.26);
+            box-shadow:0 16px 38px rgba(75,57,31,.18);
+            opacity:0;
+            transition:transform .72s cubic-bezier(.18,.78,.2,1),opacity .3s ease .28s;
+          }
+          #weddingInvitationOpen .wio-inside:after{
+            content:"Bienvenidos";
+            position:absolute;left:50%;top:69%;
+            transform:translate(-50%,-50%) translateY(16px);
+            color:#756b58;
+            font:italic 400 clamp(25px,5vw,39px)/1 "Allura","Brush Script MT",cursive;
+            letter-spacing:.02em;
+            opacity:0;
+            transition:transform .72s cubic-bezier(.18,.78,.2,1),opacity .3s ease .38s;
+          }
+          #weddingInvitationOpen .wio-flap{
+            position:absolute!important;z-index:5;inset:0!important;width:100%!important;height:100%!important;
+            object-fit:cover!important;object-position:center!important;display:block!important;
+            margin:0!important;padding:0!important;border:0!important;
+            clip-path:polygon(0 0,100% 0,100% 63.5%,50% 78%,0 63.5%);
+            transform-origin:50% 63.5%;
+            backface-visibility:hidden;-webkit-backface-visibility:hidden;
+            transition:transform .9s cubic-bezier(.2,.78,.2,1),filter .9s ease;
+          }
+          #weddingInvitationOpen .wio-seal{
+            position:absolute!important;z-index:10;left:50%!important;top:52%!important;
+            width:170px!important;height:170px!important;
+            transform:translate(-50%,-50%)!important;
+            margin:0!important;padding:0!important;border:0!important;border-radius:50%!important;
+            background:transparent!important;opacity:0!important;cursor:pointer!important;
+            appearance:none!important;-webkit-appearance:none!important;
+          }
+          #weddingInvitationOpen .wio-seal:focus,
+          #weddingInvitationOpen .wio-seal:hover,
+          #weddingInvitationOpen .wio-seal:active{
+            outline:0!important;box-shadow:none!important;background:transparent!important;opacity:0!important;
+          }
+          #weddingInvitationOpen .wio-light{
+            position:absolute;inset:-30%;z-index:20;pointer-events:none;
+            opacity:0;transform:scale(.12);
+            background:radial-gradient(circle at 50% 66%,
+              rgba(255,255,255,1) 0%,
+              rgba(255,250,229,.98) 9%,
+              rgba(255,255,255,.72) 24%,
+              rgba(255,255,255,.18) 45%,
+              rgba(255,255,255,0) 68%);
+          }
+          #weddingInvitationOpen.wio-opening .wio-flap{
+            transform:perspective(1400px) rotateX(-118deg);
+            filter:brightness(1.06);
+          }
+          #weddingInvitationOpen.wio-opening .wio-inside{
+            opacity:1;
+          }
+          #weddingInvitationOpen.wio-opening .wio-inside:before{
+            opacity:1;
+            transform:translate(-50%,-50%) translateY(-4px);
+          }
+          #weddingInvitationOpen.wio-opening .wio-inside:after{
+            opacity:1;
+            transform:translate(-50%,-50%) translateY(-4px);
+          }
+          #weddingInvitationOpen.wio-opening .wio-light{
+            animation:wioLightReal 1.05s ease-out 1.05s forwards;
+          }
+          @keyframes wioLightReal{
+            0%{opacity:0;transform:scale(.12)}
+            34%{opacity:.92;transform:scale(.62)}
+            58%{opacity:1;transform:scale(1.05)}
+            100%{opacity:1;transform:scale(1.85)}
+          }
+          @media(max-width:600px){
+            #weddingInvitationOpen .wio-seal{width:165px!important;height:165px!important}
+            #weddingInvitationOpen .wio-inside:before{width:68vw;height:19vh}
+          }
+          </style>'''
+
+          marker = '<style id="wedding-invitation-animation-style">'
+          if marker not in s:
+              raise SystemExit("No se encontró el bloque de apertura actual.")
+          s = re.sub(r'<style id="wedding-invitation-animation-style">[\s\S]*?</style>', css, s, count=1)
+
+          new_html = '''<div id="weddingInvitationOpen" aria-label="Abrir invitación">
+            <img class="wio-base" src="invitación.PNG" alt="Invitación de Ángel y Antonio">
+            <div class="wio-inside" aria-hidden="true"></div>
+            <img class="wio-flap" src="invitación.PNG" alt="" aria-hidden="true">
+            <div class="wio-light" aria-hidden="true"></div>
+            <button class="wio-seal" id="weddingInvitationHit" type="button" aria-label="Abrir invitación"></button>
+          </div>'''
+
+          start = s.find('<div id="weddingInvitationOpen"')
+          if start < 0:
+              raise SystemExit("No se encontró el contenedor de apertura.")
+          pos = start
+          depth = 0
+          while True:
+              o = s.find('<div', pos)
+              c = s.find('</div>', pos)
+              if c < 0:
+                  raise SystemExit("No se pudo cerrar el contenedor de apertura.")
+              if o >= 0 and o < c:
+                  depth += 1
+                  pos = o + 4
+              else:
+                  depth -= 1
+                  pos = c + 6
+                  if depth == 0:
+                      outer_end = pos
+                      break
+          s = s[:start] + new_html + s[outer_end:]
+
+          js = '''<script>
+          (function(){
+            var layer=document.getElementById('weddingInvitationOpen');
+            var hit=document.getElementById('weddingInvitationHit');
+            if(!layer||!hit)return;
+            var done=false;
+            function openIt(){
+              if(done)return;
+              done=true;
+              hit.blur();
+              layer.classList.add('wio-opening');
+              setTimeout(function(){
+                layer.classList.add('wio-finished');
+                setTimeout(function(){layer.remove();},800);
+              },2150);
+            }
+            hit.addEventListener('click',openIt);
+          })();
+          </script>'''
+
+          js_start = s.find("(function(){\n            var layer=document.getElementById('weddingInvitationOpen')")
+          if js_start < 0:
+              js_start = s.find("(function(){\n        var layer=document.getElementById('weddingInvitationOpen')")
+          if js_start < 0:
+              raise SystemExit("No se encontró el JavaScript de apertura.")
+          script_start = s.rfind("<script", 0, js_start)
+          script_end = s.find("</script>", js_start)
+          if script_start < 0 or script_end < 0:
+              raise SystemExit("No se encontró el bloque script de apertura.")
+          script_end += len("</script>")
+          s = s[:script_start] + js + s[script_end:]
+
+          p.write_text(s, encoding="utf-8")
+          PY
+
+          rm -f .github/workflows/abrir-sobre-real.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git add -A
+          git commit -m "Convierte la apertura en un sobre cinematográfico" || exit 0
+          git push
