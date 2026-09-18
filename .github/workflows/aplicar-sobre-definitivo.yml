@@ -1,0 +1,55 @@
+name: Aplicar sobre definitivo
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Modificar index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("index.html")
+          s=p.read_text(encoding="utf-8")
+          if 'id="wedding-invitation-opening"' in s:
+              print("Ya existe")
+              raise SystemExit(0)
+          css='''<style id="wedding-invitation-opening-style">html.wio-lock,html.wio-lock body{overflow:hidden!important}#wedding-invitation-opening{position:fixed;inset:0;z-index:2147483647;background:#efe4cf;overflow:hidden;opacity:1;visibility:visible;transition:opacity .8s ease,visibility .8s ease}#wedding-invitation-opening.wio-done{opacity:0;visibility:hidden;pointer-events:none}#wedding-invitation-opening .wio-scene,#wedding-invitation-opening .wio-flap{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}#wedding-invitation-opening .wio-flap{clip-path:polygon(6% 30.5%,94% 30.5%,50% 50.5%,6% 30.5%);backface-visibility:hidden}#wedding-invitation-opening .wio-flap-wrap{position:absolute;inset:0;transform-origin:50% 30.5%;transform-style:preserve-3d;transition:transform 1.15s cubic-bezier(.2,.78,.18,1)}#wedding-invitation-opening.wio-open .wio-flap-wrap{transform:rotateX(-170deg)}#wedding-invitation-opening .wio-inside{position:absolute;left:6%;right:6%;top:30.5%;height:32%;background:radial-gradient(ellipse at 50% 35%,#fffdf5,#f7ecd3 52%,#dfc79d);opacity:0;transform:translateY(10%);transition:opacity .45s ease .16s,transform .85s cubic-bezier(.18,.78,.2,1) .16s}#wedding-invitation-opening.wio-open .wio-inside{opacity:1;transform:translateY(-4%)}#wedding-invitation-opening .wio-seal{position:absolute;left:50%;top:51.5%;width:min(23vw,105px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;box-shadow:0 5px 22px rgba(62,42,19,.3)}#wedding-invitation-opening .wio-seal img{width:100%;height:100%;object-fit:cover;object-position:50% 51.5%}#wedding-invitation-opening .wio-hit{position:absolute;left:50%;top:51.5%;width:min(31vw,145px);aspect-ratio:1;transform:translate(-50%,-50%);border:0;background:transparent;padding:0;z-index:20}#wedding-invitation-opening .wio-light{position:absolute;inset:-20%;z-index:30;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 52%,transparent 0 18%,rgba(255,248,221,.82) 45%,rgba(255,255,255,.99) 72%,#fff);transform:scale(.65)}#wedding-invitation-opening.wio-open .wio-light{animation:wio-flash .9s ease 1.08s forwards}@keyframes wio-flash{0%{opacity:0;transform:scale(.65)}35%{opacity:1;transform:scale(.95)}100%{opacity:0;transform:scale(1.15)}}</style>'''
+          html='''<div id="wedding-invitation-opening"><img class="wio-scene" src="invitaci%C3%B3n.PNG" alt=""><div class="wio-inside"></div><div class="wio-flap-wrap"><img class="wio-flap" src="invitaci%C3%B3n.PNG" alt=""><span class="wio-seal"><img src="invitaci%C3%B3n.PNG" alt=""></span></div><button class="wio-hit" type="button" aria-label="Abrir invitación"></button><div class="wio-light"></div></div>'''
+          js='''<script id="wedding-invitation-opening-script">(function(){var o=document.getElementById("wedding-invitation-opening"),h=o&&o.querySelector(".wio-hit");if(!o||!h)return;document.documentElement.classList.add("wio-lock");h.onclick=function(){h.disabled=true;o.classList.add("wio-open");setTimeout(function(){o.classList.add("wio-done");document.documentElement.classList.remove("wio-lock");setTimeout(function(){o.remove()},850)},2100)}})();</script>'''
+          s=s.replace("</head>",css+"</head>",1)
+          b=s.find("<body"); e=s.find(">",b)
+          s=s[:e+1]+html+s[e+1:]
+          s=s.replace("</body>",js+"</body>",1)
+          p.write_text(s,encoding="utf-8")
+          PY
+
+      - name: Publicar y limpiar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Recupera sobre y apertura"
+          git push origin main
+          gh pr close "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" || true
+          git push origin --delete "${{ github.event.pull_request.head.ref }}" || true
+          rm -f .github/workflows/aplicar-sobre-definitivo.yml
+          git add .github/workflows/aplicar-sobre-definitivo.yml
+          git commit -m "Limpia workflow de apertura" || true
+          git push origin main || true
