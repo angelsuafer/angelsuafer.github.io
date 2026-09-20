@@ -18,5 +18,71 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
 <button id="sealHit" type="button" aria-label="Abrir invitación"></button>
 <div id="glow"></div>
 </div>
-<script>(function(){var intro=document.getElementById('intro'),hit=document.getElementById('sealHit');hit.addEventListener('click',function(){hit.disabled=true;intro.classList.add('open');setTimeout(function(){intro.classList.add('done')},1050)},{once:true})})();</script>
+<script>
+(function(){
+  var site=document.getElementById('site');
+
+  function connectRSVP(){
+    try{
+      var win=site.contentWindow;
+      var doc=site.contentDocument;
+      if(!win||!doc)return;
+
+      win.sendRSVP=async function(event){
+        if(event)event.preventDefault();
+        var form=event&&event.target?event.target:doc.querySelector('#rsvp form');
+        if(!form)return false;
+
+        var button=form.querySelector('button[type="submit"]');
+        if(button){button.disabled=true;button.textContent='ENVIANDO…';}
+
+        var data={
+          name:(doc.getElementById('name')||{}).value||'',
+          companions:(doc.getElementById('companions')||{}).value==='Acompañado/a'
+            ?((doc.getElementById('companion_names')||{}).value||'')
+            :((doc.getElementById('companions')||{}).value||''),
+          attendance:(doc.getElementById('attendance')||{}).value||'',
+          allergies:(doc.getElementById('allergies')||{}).value||'',
+          hotel:(doc.getElementById('hotel')||{}).value||'',
+          arrival:(doc.getElementById('transport')||{}).value||'',
+          song_1:(doc.getElementById('song1')||{}).value||'',
+          song_2:(doc.getElementById('song2')||{}).value||'',
+          song_3:(doc.getElementById('song3')||{}).value||''
+        };
+
+        try{
+          var response=await fetch('https://dfwfytgiehdfrewgbdic.supabase.co/functions/v1/rsvp',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(data)
+          });
+          var result=await response.json().catch(function(){return {};});
+          if(!response.ok||!result.ok)throw new Error(result.error||'RSVP error');
+
+          if(button){button.textContent='✓ RSVP ENVIADO';button.disabled=true;}
+          var msg=doc.createElement('p');
+          msg.textContent='¡Gracias! Hemos recibido vuestra respuesta. ❤️';
+          msg.style.cssText="text-align:center;margin:16px 0 0;color:#66705a;font:18px 'EB Garamond',serif;";
+          form.appendChild(msg);
+        }catch(error){
+          console.error(error);
+          if(button){button.disabled=false;button.textContent='ENVIAR RSVP';}
+          alert('No hemos podido enviar el RSVP. Por favor, inténtalo de nuevo.');
+        }
+        return false;
+      };
+    }catch(error){console.error('No se pudo conectar el RSVP:',error);}
+  }
+
+  site.addEventListener('load',connectRSVP);
+  if(site.contentDocument&&site.contentDocument.readyState==='complete')connectRSVP();
+
+  var intro=document.getElementById('intro'),hit=document.getElementById('sealHit');
+  hit.addEventListener('click',function(){
+    hit.disabled=true;
+    intro.classList.add('open');
+    setTimeout(function(){intro.classList.add('done')},1050);
+  },{once:true});
+})();
+</script>
 </body></html>
