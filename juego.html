@@ -107,11 +107,15 @@ $('score').textContent=score.toLocaleString('es-ES');
 $('finalStats').innerHTML='✓ '+correctCount+' respuestas correctas &nbsp;·&nbsp; ✕ '+(questions.length-correctCount)+' fallos';
 let message='';
 if(correctCount<5){
-  message='Nos conoces poco, has suspendido. El 17 de abril tendrás la oportunidad de saber aún más de nosotros.';
+  message='Esta vez no has aprobado, era complicado. El 17 de abril tienes el examen de recuperación. ¡Ven con muchas ganas! 🎉';
+}else if(correctCount<7){
+  message='Todavía nos quedan historias por descubrir. Tranqui, el 17 de abril seguiremos escribiendo este cuento juntos 🤵🏽‍♂️';
+}else if(correctCount<9){
+  message='¡Muy bien! Se nota que nos conoces bastante. El 17 de abril toca demostrarlo en la pista de baile 🕺';
 }else if(correctCount<10){
-  message='Nos conoces bastante, por eso tu presencia el 17/04 es tan importante.';
+  message='¡Guau! Nos conoces súper bien, eso significa que ya formas parte de nuestra historia. El 17 de abril nos toca celebrarla juntos 🥰';
 }else{
-  message='Madre mía, no solo nos conoces, ya somos familia. El 17/04 bailaremos hasta el fin del mundo.';
+  message='¡PLENO! No solo nos conoces, ya somos familia. El 17 de abril bailaremos hasta «el fin del mundo» ♥️';
 }
 $('finalMessage').textContent=message;
 $('playerName').value='';
