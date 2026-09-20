@@ -19,7 +19,7 @@ h1,h2{font-family:'Cormorant Garamond',serif;font-weight:600;text-align:center;m
 .question{font-size:clamp(28px,7vw,44px);margin-bottom:24px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answer{border:1px solid var(--line);background:var(--paper);border-radius:18px;padding:17px 16px;text-align:left;cursor:pointer;color:var(--ink);font-size:19px;line-height:1.15;min-height:72px;transition:.15s}.answer:hover{border-color:var(--line);transform:none}.answer:focus,.answer:focus-visible,.answer:active{outline:none;border-color:var(--line);box-shadow:none}.answer.correct{background:#e8eee1;border-color:#8a9b79}.answer.wrong{background:#f3e4df;border-color:#b88677}.answer:disabled{cursor:default}
 .feedback{text-align:center;min-height:32px;margin:15px 0 0;font-size:18px;color:var(--olive2)}.score{font-family:'Cormorant Garamond',serif;font-size:72px;color:var(--gold);text-align:center;line-height:1;margin:12px 0}.result-copy{text-align:center;font-size:20px;color:var(--muted);margin:0 auto 18px}.final-stats{text-align:center;font:600 20px "Cormorant Garamond",serif;color:var(--ink);line-height:1.5;margin:0 auto 10px}.final-message{text-align:center;font-size:21px;line-height:1.35;color:var(--olive2);max-width:560px;margin:0 auto 24px}
 .field{margin:20px 0}.field label{display:block;font-size:17px;margin-bottom:8px}.field input{width:100%;border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fffdf8;color:var(--ink);outline:none;font-size:18px}.field input:focus{border-color:var(--gold)}
-.notice{font-size:14px;line-height:1.4;color:var(--muted);text-align:center;margin-top:15px}.leaf{font-size:27px;text-align:center;margin:6px 0 12px}.back{display:inline-block;color:var(--olive2);text-decoration:none;font-size:15px;margin-bottom:22px}.ranking{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}.ranking h3{font:600 22px 'Cormorant Garamond',serif;text-align:center;margin:0 0 10px}.rankrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(79,91,71,.1);font-size:17px}.hidden{display:none!important}
+.ranking-btn{margin-top:12px;background:transparent;color:var(--olive2);border:1px solid var(--line);font-size:14px;padding:10px 20px}.notice{font-size:14px;line-height:1.4;color:var(--muted);text-align:center;margin-top:15px}.leaf{font-size:27px;text-align:center;margin:6px 0 12px}.back{display:inline-block;color:var(--olive2);text-decoration:none;font-size:15px;margin-bottom:22px}.ranking{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}.ranking h3{font:600 22px 'Cormorant Garamond',serif;text-align:center;margin:0 0 10px}.rankrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(79,91,71,.1);font-size:17px}.hidden{display:none!important}
 @media(max-width:560px){.screen{padding:20px 14px 30px}.card{padding:22px 17px;border-radius:23px}.answers{grid-template-columns:1fr}.answer{min-height:62px}.question{font-size:32px}.score{font-size:64px}}
 </style>
 </head>
@@ -29,8 +29,8 @@ h1,h2{font-family:'Cormorant Garamond',serif;font-weight:600;text-align:center;m
 <div class="brand"><div class="eyebrow">Ángel & Antonio · 17 abril 2027</div><div class="names">nuestro juego</div></div>
 <div class="card"><div class="leaf">🌿</div><h1>¿Nos conoces?</h1>
 <p class="intro">Diez preguntas. Una oportunidad. Y un pequeño premio para quien mejor nos conozca. 😉</p>
-<div class="center"><button id="startBtn" class="btn">Comenzar juego</button></div>
-<p class="notice">Cada pregunta tiene 20 segundos. Cuanto más rápido aciertes, más puntos consigues.</p></div>
+<div class="center"><button id="startBtn" class="btn">Comenzar juego</button><br><button id="rankingBtn" class="btn ranking-btn" type="button">🏆 Ver ranking</button></div>
+<p class="notice">Cada pregunta tiene 20 segundos. Cuanto más rápido aciertes, más puntos consigues.</p><div id="startRanking" class="ranking hidden"></div></div>
 </div></section>
 
 <section id="quiz" class="screen"><div class="wrap"><div class="card">
@@ -148,6 +148,26 @@ try{
 function renderRanking(arr){
 const el=$('ranking');el.classList.remove('hidden');
 el.innerHTML='<h3>🏆 Clasificación</h3>'+arr.map((x,n)=>`<div class="rankrow"><span>${n+1}. ${escapeHtml(x.player_name)}</span><strong>${Number(x.score).toLocaleString('es-ES')}</strong></div>`).join('');
+}
+$('rankingBtn').onclick=async()=>{
+  const el=$('startRanking');
+  el.classList.remove('hidden');
+  el.innerHTML='<h3>🏆 Clasificación · Top 10</h3><div class="notice">Cargando…</div>';
+  try{
+    const response=await fetch(GAME_API,{method:'GET'});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.error||'Error');
+    renderRankingInto(el,data.ranking||[]);
+  }catch(e){
+    el.innerHTML='<h3>🏆 Clasificación · Top 10</h3><div class="notice">No hemos podido cargar la clasificación. Inténtalo de nuevo.</div>';
+  }
+};
+function renderRankingInto(el,arr){
+  el.innerHTML='<h3>🏆 Clasificación · Top 10</h3>'+(
+    arr.length
+    ? arr.map((x,n)=>'<div class="rankrow"><span>'+(n+1)+'. '+escapeHtml(x.player_name)+'</span><strong>'+Number(x.score).toLocaleString('es-ES')+'</strong></div>').join('')
+    : '<div class="notice">Todavía no hay puntuaciones.</div>'
+  );
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
 </script>
