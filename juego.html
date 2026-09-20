@@ -125,12 +125,18 @@ $('saveNotice').textContent='Tu puntuación se guardará en el marcador común. 
 $('saveBtn').onclick=async()=>{
 const name=$('playerName').value.trim();
 if(!name){$('playerName').focus();return}
-const btn=$('saveBtn');btn.disabled=true;$('saveNotice').textContent='Guardando tu puntuación…';
+const btn=$('saveBtn');
+if(localStorage.getItem(PLAYED_KEY)==='1'){
+  $('saveNotice').textContent='🤣 Tramposillo… tus respuestas ya han sido registradas. No se vale repetir el test.';
+  btn.disabled=true;
+  return;
+}
+btn.disabled=true;$('saveNotice').textContent='Guardando tu puntuación…';
 try{
   const response=await fetch(GAME_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,player_id:getPlayerId()})});
   const data=await response.json();
   if(response.status===409||data.alreadyPlayed){
-    $('saveNotice').textContent='⚠️ Esta partida ya está registrada. No puedes volver a participar.';
+    $('saveNotice').textContent='🤣 Tramposillo… tus respuestas ya han sido registradas. No se vale repetir el test.';
     btn.disabled=true;
     localStorage.setItem(PLAYED_KEY,'1');
     return;
