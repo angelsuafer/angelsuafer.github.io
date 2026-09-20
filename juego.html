@@ -43,9 +43,9 @@ h1,h2{font-family:'Cormorant Garamond',serif;font-weight:600;text-align:center;m
 <div class="eyebrow">Fin del juego</div><div class="leaf">🏆</div><h2>¡Tenemos una puntuación!</h2>
 <div id="score" class="score">0</div><p class="result-copy">puntos</p>
 <div class="field"><label for="playerName">¿Cómo te llamas?</label><input id="playerName" maxlength="50" autocomplete="name" placeholder="Nombre y apellidos"></div>
-<div class="center"><button id="saveBtn" class="btn">Guardar mi puntuación</button></div>
-<p id="saveNotice" class="notice">La clasificación definitiva se conectará cuando terminemos de configurar el marcador.</p>
-<div id="localRanking" class="ranking hidden"></div>
+<div class="center"><button id="saveBtn" class="btn" type="button">Guardar mi puntuación</button></div>
+<p id="saveNotice" class="notice">Tu puntuación se guardará en el marcador común. Recuerda: solo puedes participar una vez.</p>
+<div id="ranking" class="ranking hidden"></div>
 </div></div></section>
 
 <script>
@@ -64,9 +64,18 @@ const questions=[
 
 let i=0,score=0,time=20,timerId=null,answered=false;
 const $=id=>document.getElementById(id);
-const music=$('gameMusic');
+const GAME_API='https://dfwfytgiehdfrewgbdic.supabase.co/functions/v1/game';
+const PLAYER_KEY='angelyantonio_game_player_id';
+const PLAYED_KEY='angelyantonio_online_played';
 
-function startMusic(){music.play().catch(()=>{});}
+function getPlayerId(){
+  let id=localStorage.getItem(PLAYER_KEY);
+  if(!id){
+    id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+    localStorage.setItem(PLAYER_KEY,id);
+  }
+  return id;
+}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
 $('startBtn').onclick=()=>{i=0;score=0;show('quiz');render()};
 const backToWedding=$('backToWedding');
@@ -89,15 +98,34 @@ else{const gained=1000+Math.max(0,time)*50;score+=gained;$('feedback').textConte
 $('bar').style.width=((i+1)/questions.length*100)+'%';
 setTimeout(()=>{i++;if(i<questions.length)render();else finish()},850)
 }
-function finish(){show('result');$('score').textContent=score.toLocaleString('es-ES');$('playerName').value='';$('saveNotice').textContent='Tu puntuación se guardará en este dispositivo por ahora. Después conectaremos el marcador común para que podáis competir todos.'}
-$('saveBtn').onclick=()=>{
-const name=$('playerName').value.trim();if(!name){$('playerName').focus();return}
-const key='angelyantonio_scores';const arr=JSON.parse(localStorage.getItem(key)||'[]');
-arr.push({name,score,date:new Date().toISOString()});arr.sort((x,y)=>y.score-x.score);
-localStorage.setItem(key,JSON.stringify(arr.slice(0,20)));renderLocal(arr.slice(0,10));
-$('saveNotice').textContent='¡Puntuación guardada! 🥂';$('saveBtn').disabled=true
+function finish(){show('result');$('score').textContent=score.toLocaleString('es-ES');$('playerName').value='';$('saveBtn').disabled=false;$('saveNotice').textContent='Tu puntuación se guardará en el marcador común. Recuerda: solo puedes participar una vez.'}
+$('saveBtn').onclick=async()=>{
+const name=$('playerName').value.trim();
+if(!name){$('playerName').focus();return}
+const btn=$('saveBtn');btn.disabled=true;$('saveNotice').textContent='Guardando tu puntuación…';
+try{
+  const response=await fetch(GAME_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,player_id:getPlayerId()})});
+  const data=await response.json();
+  if(response.status===409||data.alreadyPlayed){
+    $('saveNotice').textContent='⚠️ Esta partida ya está registrada. No puedes volver a participar.';
+    btn.disabled=true;
+    localStorage.setItem(PLAYED_KEY,'1');
+    return;
+  }
+  if(!response.ok) throw new Error(data.error||'Error');
+  localStorage.setItem(PLAYED_KEY,'1');
+  $('saveNotice').textContent='¡Puntuación guardada en el marcador! 🥂';
+  renderRanking(data.ranking||[]);
+}catch(error){
+  console.error(error);
+  btn.disabled=false;
+  $('saveNotice').textContent='No hemos podido guardar la puntuación. Comprueba tu conexión e inténtalo de nuevo.';
+}
 };
-function renderLocal(arr){const el=$('localRanking');el.classList.remove('hidden');el.innerHTML='<h3>Marcador de este dispositivo</h3>'+arr.map((x,n)=>`<div class="rankrow"><span>${n+1}. ${escapeHtml(x.name)}</span><strong>${x.score.toLocaleString('es-ES')}</strong></div>`).join('')}
-function escapeHtml(s){return s.replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+function renderRanking(arr){
+const el=$('ranking');el.classList.remove('hidden');
+el.innerHTML='<h3>🏆 Clasificación</h3>'+arr.map((x,n)=>`<div class="rankrow"><span>${n+1}. ${escapeHtml(x.player_name)}</span><strong>${Number(x.score).toLocaleString('es-ES')}</strong></div>`).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
 </script>
 </body></html>
