@@ -28,6 +28,35 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
       var doc=site.contentDocument;
       if(!win||!doc)return;
 
+      var attendance=doc.getElementById('attendance');
+      var form=doc.querySelector('#rsvp form');
+      if(form && attendance && !doc.getElementById('attendanceNoteWrap')){
+        var noteWrap=doc.createElement('div');
+        noteWrap.id='attendanceNoteWrap';
+        noteWrap.className='conditional';
+        noteWrap.hidden=true;
+        noteWrap.innerHTML='<label for="attendance_note">¿Quieres compartir algo con nosotros?</label><p class="rsvp-note-help">Si quieres, puedes dejarnos voluntariamente una pequeña nota.</p><textarea id="attendance_note" name="attendance_note" placeholder="Tu nota (opcional)"></textarea>';
+        var allergies=doc.getElementById('allergies');
+        allergies.parentNode.insertBefore(noteWrap, allergies);
+
+        var style=doc.createElement('style');
+        style.textContent='.rsvp-note-help{margin:-7px 0 8px;color:#8b8376;font:14px/1.35 "EB Garamond",Georgia,serif;font-style:italic}.rsvp-change-note{margin:18px auto 0;max-width:560px;text-align:center;color:#81786a;font:14px/1.45 "EB Garamond",Georgia,serif}.rsvp-change-note strong{font-weight:500;color:#756956}';
+        doc.head.appendChild(style);
+
+        function syncNote(){
+          var show=attendance.value==='No puedo ir'||attendance.value==='Pendiente';
+          noteWrap.hidden=!show;
+          if(!show)doc.getElementById('attendance_note').value='';
+        }
+        attendance.addEventListener('change',syncNote);
+        syncNote();
+
+        var change=doc.createElement('p');
+        change.className='rsvp-change-note';
+        change.innerHTML='¿Ha cambiado algo desde que enviaste tu respuesta?<br>No pasa nada. Puedes volver a rellenar el formulario o escribirnos por WhatsApp <strong>hasta el lunes 5 de abril de 2027</strong>.';
+        form.appendChild(change);
+      }
+
       win.sendRSVP=async function(event){
         if(event)event.preventDefault();
         var form=event&&event.target?event.target:doc.querySelector('#rsvp form');
@@ -42,6 +71,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
             ?((doc.getElementById('companion_names')||{}).value||'')
             :((doc.getElementById('companions')||{}).value||''),
           attendance:(doc.getElementById('attendance')||{}).value||'',
+          note:(doc.getElementById('attendance_note')||{}).value||'',
           allergies:(doc.getElementById('allergies')||{}).value||'',
           hotel:(doc.getElementById('hotel')||{}).value||'',
           arrival:(doc.getElementById('transport')||{}).value||'',
