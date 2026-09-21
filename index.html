@@ -40,7 +40,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
         allergies.parentNode.insertBefore(noteWrap, allergies);
 
         var style=doc.createElement('style');
-        style.textContent='.rsvp-note-help{margin:-7px 0 8px;color:#8b8376;font:14px/1.35 "EB Garamond",Georgia,serif;font-style:italic}.rsvp-change-note{margin:18px auto 0;max-width:560px;text-align:center;color:#81786a;font:14px/1.45 "EB Garamond",Georgia,serif}.rsvp-change-note strong{font-weight:500;color:#756956}';
+        style.textContent='.rsvp-note-help{margin:-7px 0 8px;color:#8b8376;font:14px/1.35 "EB Garamond",Georgia,serif;font-style:italic}.rsvp-change-note{margin:18px auto 0;max-width:560px;text-align:center;color:#81786a;font:14px/1.45 "EB Garamond",Georgia,serif}.rsvp-change-note strong{font-weight:500;color:#756956}.botanical-bottom{display:none!important}';
         doc.head.appendChild(style);
 
         function syncNote(){
@@ -55,6 +55,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
         change.className='rsvp-change-note';
         change.innerHTML='¿Ha cambiado algo desde que enviaste tu respuesta?<br>No pasa nada. Puedes volver a rellenar el formulario o escribirnos por WhatsApp <strong>hasta el lunes 5 de abril de 2027</strong>.';
         form.appendChild(change);
+      } else if(doc.head && !doc.getElementById('timelineDecorationFix')){
+        var style2=doc.createElement('style');
+        style2.id='timelineDecorationFix';
+        style2.textContent='.botanical-bottom{display:none!important}';
+        doc.head.appendChild(style2);
       }
 
       win.sendRSVP=async function(event){
