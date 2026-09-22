@@ -163,6 +163,57 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
         attendance.addEventListener('change',syncNote);
         syncNote();
 
+        var companions=doc.getElementById('companions');
+        var companionLabel=doc.querySelector('label[for="companions"]');
+        var companionNames=doc.getElementById('companionNames');
+        var companionNamesLabel=doc.querySelector('label[for="companion_names"]');
+        if(companionNamesLabel)companionNamesLabel.textContent='¿Con quién vienes? Escribe el nombre y apellidos de tu acompañante o acompañantes.';
+        var attendanceLabel=doc.querySelector('label[for="attendance"]');
+        var allergiesLabel2=doc.querySelector('label[for="allergies"]');
+        if(allergiesLabel2)allergiesLabel2.textContent='Alergias e intolerancias';
+        var hotelLabel=doc.querySelector('label[for="hotelSelect"]')||doc.querySelector('label[for="hotel"]');
+        var transport=doc.getElementById('transport');
+        var transportLabel=doc.querySelector('label[for="transport"]');
+        var songsLabel=doc.querySelector('label:not([for])');
+        var songs=doc.querySelector('.songs');
+        var nameField=doc.getElementById('name');
+        var nameLabel=doc.querySelector('label[for="name"]');
+        var button=form.querySelector('button[type="submit"]');
+
+        function moveNode(node){if(node)form.appendChild(node);}
+        moveNode(nameLabel); moveNode(nameField);
+        moveNode(attendanceLabel); moveNode(attendance); moveNode(noteWrap);
+        moveNode(companionLabel); moveNode(companions); moveNode(companionNames);
+        moveNode(allergiesLabel2); moveNode(allergies);
+        moveNode(hotelLabel); moveNode(doc.getElementById('hotelSelect')||doc.getElementById('hotel')); moveNode(doc.getElementById('otherHotelWrap'));
+        moveNode(transportLabel); moveNode(transport);
+        if(songsLabel && songsLabel.textContent.indexOf('Las 3 canciones')!==-1)moveNode(songsLabel);
+        moveNode(songs);
+        moveNode(button);
+
+        var postAttendanceNodes=[companionLabel,companions,companionNames,allergiesLabel2,allergies,hotelLabel,doc.getElementById('hotelSelect')||doc.getElementById('hotel'),doc.getElementById('otherHotelWrap'),transportLabel,transport,songsLabel,songs];
+        function setUnavailable(disabled){
+          postAttendanceNodes.forEach(function(node){
+            if(!node)return;
+            node.style.opacity=disabled?'0.45':'';
+            var controls=node.matches&&node.matches('input,select,textarea')?[node]:node.querySelectorAll?node.querySelectorAll('input,select,textarea'):[];
+            Array.from(controls).forEach(function(control){control.disabled=disabled;});
+          });
+        }
+        function syncAttendance(){
+          var no=attendance.value==='No puedo ir';
+          setUnavailable(no);
+          if(no){
+            companions.value='';
+            if(companionNames){companionNames.hidden=true;var ci=companionNames.querySelector('input');if(ci)ci.value='';}
+            if(doc.getElementById('hotelSelect'))doc.getElementById('hotelSelect').value='';
+            if(doc.getElementById('otherHotelWrap'))doc.getElementById('otherHotelWrap').hidden=true;
+          }
+          syncNote();
+        }
+        attendance.addEventListener('change',syncAttendance);
+        syncAttendance();
+
         var change=doc.createElement('p');
         change.className='rsvp-change-note';
         change.innerHTML='¿Ha cambiado algo desde que enviaste tu respuesta?<br>No pasa nada. Puedes volver a rellenar el formulario o escribirnos por WhatsApp <strong>hasta el lunes 5 de abril de 2027</strong>.';
