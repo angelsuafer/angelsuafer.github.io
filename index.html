@@ -22,11 +22,74 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
 (function(){
   var site=document.getElementById('site');
 
+  function connectCountdown(doc){
+    try{
+      var countdown=doc.getElementById('weddingCountdown');
+      if(!countdown||doc.getElementById('cdMonths'))return;
+      var days=doc.getElementById('cdDays');
+      if(!days)return;
+      var months=doc.createElement('div');
+      months.className='count-unit';
+      months.innerHTML='<span id="cdMonths">0</span><small>MESES</small>';
+      countdown.insertBefore(months,days.parentNode);
+      days.parentNode.querySelector('small').textContent='DÍAS';
+
+      var style=doc.createElement('style');
+      style.id='monthCountdownStyle';
+      style.textContent='.countdown{display:flex;justify-content:center;gap:0}.countdown .count-unit{min-width:63px}.countdown .count-unit span{display:flex;flex-direction:column;line-height:1}.countdown .count-unit small{display:block}.countdown .count-unit:first-child{border-left:0}@media(max-width:700px){.countdown .count-unit{min-width:52px}}';
+      doc.head.appendChild(style);
+
+      var target=new Date('2027-04-17T17:30:00+02:00');
+      var mEl=doc.getElementById('cdMonths');
+      var hEl=doc.getElementById('cdHours');
+      var minEl=doc.getElementById('cdMinutes');
+      var sEl=doc.getElementById('cdSeconds');
+      var timer;
+      function addMonth(date){
+        var next=new Date(date.getTime());
+        var day=next.getDate();
+        next.setDate(1);
+        next.setMonth(next.getMonth()+1);
+        var last=new Date(next.getFullYear(),next.getMonth()+1,0).getDate();
+        next.setDate(Math.min(day,last));
+        return next;
+      }
+      function tick(){
+        var now=new Date();
+        var remaining=Math.max(0,target.getTime()-now.getTime());
+        var cursor=new Date(now.getTime());
+        var count=0;
+        while(remaining>0){
+          var next=addMonth(cursor);
+          if(next.getTime()>target.getTime())break;
+          cursor=next;
+          count++;
+        }
+        var rest=Math.max(0,target.getTime()-cursor.getTime());
+        var total=Math.floor(rest/1000);
+        var d=Math.floor(total/86400);
+        var h=Math.floor((total%86400)/3600);
+        var min=Math.floor((total%3600)/60);
+        var sec=total%60;
+        if(mEl)mEl.textContent=String(count);
+        if(days)days.textContent=String(d);
+        if(hEl)hEl.textContent=String(h).padStart(2,'0');
+        if(minEl)minEl.textContent=String(min).padStart(2,'0');
+        if(sEl)sEl.textContent=String(sec).padStart(2,'0');
+        if(remaining<=0)window.clearInterval(timer);
+      }
+      tick();
+      timer=window.setInterval(tick,1000);
+    }catch(e){console.error('No se pudo actualizar la cuenta atrás:',e);}
+  }
+
   function connectRSVP(){
     try{
       var win=site.contentWindow;
       var doc=site.contentDocument;
       if(!win||!doc)return;
+
+      connectCountdown(doc);
 
       var attendance=doc.getElementById('attendance');
       var form=doc.querySelector('#rsvp form');
@@ -66,15 +129,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
         if(event)event.preventDefault();
         var form=event&&event.target?event.target:doc.querySelector('#rsvp form');
         if(!form)return false;
-
         var button=form.querySelector('button[type="submit"]');
         if(button){button.disabled=true;button.textContent='ENVIANDO…';}
-
         var data={
           name:(doc.getElementById('name')||{}).value||'',
-          companions:(doc.getElementById('companions')||{}).value==='Acompañado/a'
-            ?((doc.getElementById('companion_names')||{}).value||'')
-            :((doc.getElementById('companions')||{}).value||''),
+          companions:(doc.getElementById('companions')||{}).value==='Acompañado/a'?((doc.getElementById('companion_names')||{}).value||''):((doc.getElementById('companions')||{}).value||''),
           attendance:(doc.getElementById('attendance')||{}).value||'',
           note:(doc.getElementById('attendance_note')||{}).value||'',
           allergies:(doc.getElementById('allergies')||{}).value||'',
@@ -84,16 +143,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
           song_2:(doc.getElementById('song2')||{}).value||'',
           song_3:(doc.getElementById('song3')||{}).value||''
         };
-
         try{
-          var response=await fetch('https://dfwfytgiehdfrewgbdic.supabase.co/functions/v1/rsvp',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify(data)
-          });
+          var response=await fetch('https://dfwfytgiehdfrewgbdic.supabase.co/functions/v1/rsvp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
           var result=await response.json().catch(function(){return {};});
           if(!response.ok||!result.ok)throw new Error(result.error||'RSVP error');
-
           if(button){button.textContent='✓ RSVP ENVIADO';button.disabled=true;}
           var msg=doc.createElement('p');
           msg.textContent='¡Gracias! Hemos recibido vuestra respuesta. ❤️';
