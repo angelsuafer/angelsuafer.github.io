@@ -45,6 +45,24 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
       var minEl=doc.getElementById('cdMinutes');
       var sEl=doc.getElementById('cdSeconds');
       var timer;
+      var nativeTextContent=Object.getOwnPropertyDescriptor(Node.prototype,'textContent');
+      var updating=false;
+      [mEl,days,hEl,minEl,sEl].forEach(function(el){
+        if(!el||!nativeTextContent)return;
+        Object.defineProperty(el,'textContent',{
+          configurable:true,
+          get:function(){return nativeTextContent.get.call(el);},
+          set:function(value){
+            if(updating)nativeTextContent.set.call(el,value);
+          }
+        });
+      });
+      function setValue(el,value){
+        if(!el)return;
+        updating=true;
+        el.textContent=value;
+        updating=false;
+      }
       function addMonth(date){
         var next=new Date(date.getTime());
         var day=next.getDate();
@@ -71,11 +89,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
         var h=Math.floor((total%86400)/3600);
         var min=Math.floor((total%3600)/60);
         var sec=total%60;
-        if(mEl)mEl.textContent=String(count);
-        if(days)days.textContent=String(d);
-        if(hEl)hEl.textContent=String(h).padStart(2,'0');
-        if(minEl)minEl.textContent=String(min).padStart(2,'0');
-        if(sEl)sEl.textContent=String(sec).padStart(2,'0');
+        setValue(mEl,String(count));
+        setValue(days,String(d));
+        setValue(hEl,String(h).padStart(2,'0'));
+        setValue(minEl,String(min).padStart(2,'0'));
+        setValue(sEl,String(sec).padStart(2,'0'));
         if(remaining<=0)window.clearInterval(timer);
       }
       tick();
