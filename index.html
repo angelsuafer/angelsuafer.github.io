@@ -111,6 +111,26 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
 
       var attendance=doc.getElementById('attendance');
       var form=doc.querySelector('#rsvp form');
+      var hotelField=doc.getElementById('hotel');
+      if(hotelField && !doc.getElementById('hotelSelectWrap')){
+        var hotelWrap=hotelField.parentNode;
+        hotelWrap.id='hotelSelectWrap';
+        hotelWrap.innerHTML='<label for="hotel">¿En qué alojamiento?</label><select id="hotel" name="hotel"><option value="" selected>Selecciona una opción</option><option value="Abades Loja">Abades Loja</option><option value="Abades Manzanil">Abades Manzanil</option><option value="Otro Alojamiento">Otro Alojamiento</option></select><div id="otherHotelWrap" class="conditional" hidden><label for="other_hotel">¿Cuál?</label><input id="other_hotel" name="other_hotel" type="text" placeholder="Ej. Hotel Mirador"></div>';
+        var hotelStyle=doc.createElement('style');
+        hotelStyle.textContent='#hotelSelectWrap select,#hotelSelectWrap input{width:100%;box-sizing:border-box}#otherHotelWrap{margin-top:14px}';
+        doc.head.appendChild(hotelStyle);
+        var hotelSelect=doc.getElementById('hotel');
+        var otherHotelWrap=doc.getElementById('otherHotelWrap');
+        var otherHotel=doc.getElementById('other_hotel');
+        function syncHotel(){
+          var show=hotelSelect.value==='Otro Alojamiento';
+          otherHotelWrap.hidden=!show;
+          if(!show)otherHotel.value='';
+        }
+        hotelSelect.addEventListener('change',syncHotel);
+        syncHotel();
+      }
+
       if(form && attendance && !doc.getElementById('attendanceNoteWrap')){
         var noteWrap=doc.createElement('div');
         noteWrap.id='attendanceNoteWrap';
@@ -155,7 +175,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efe7d7}
           attendance:(doc.getElementById('attendance')||{}).value||'',
           note:(doc.getElementById('attendance_note')||{}).value||'',
           allergies:(doc.getElementById('allergies')||{}).value||'',
-          hotel:(doc.getElementById('hotel')||{}).value||'',
+          hotel:(doc.getElementById('hotel')||{}).value==='Otro Alojamiento'?((doc.getElementById('other_hotel')||{}).value||'Otro Alojamiento'):((doc.getElementById('hotel')||{}).value||''),
           arrival:(doc.getElementById('transport')||{}).value||'',
           song_1:(doc.getElementById('song1')||{}).value||'',
           song_2:(doc.getElementById('song2')||{}).value||'',
